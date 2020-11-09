@@ -1,0 +1,6 @@
+*.old
+*.o
+*.x
+pyros
+vgcore*
+.ccls-cache/
