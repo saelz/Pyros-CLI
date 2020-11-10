@@ -220,9 +220,6 @@ main(int argc, char *argv[]){
 	if (PDB_PATH == NULL)
 		get_database_path();
 
-	printf("%s\n",PDB_PATH);
-
-
 	current_cmd->func(cmd_arg_count,cmd_args);
 
 	free(PDB_PATH);
