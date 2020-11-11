@@ -39,28 +39,28 @@ typedef void(*foreach)(PyrosDB*, const char*, const char*);
 
 
 const struct Cmd commands[] = {
-	{"help"         ,"h" ,&help        ,0,-1,NULL, "Prints help message"},
-	{"create"       ,"c" ,&create      ,0,-1,NULL, "Creates a database"},
-	{"version"      ,"v" ,&version     ,0,-1,NULL, "Shows database Version"},
-	{"add"          ,"a" ,&add         ,1,-1,NULL, "Adds file to database"},
-	{"add-tag"      ,"at",&add_tag     ,2,-1,NULL, "Adds tag to file"},
-	{"search"       ,"s" ,&search      ,1,-1,NULL, "Searches for files by tags"},
-	{"list-hashes"  ,"lh",&list_hash   ,0 ,0,NULL, "Lists all file hashes"},
-	{"get-alias"    ,"ga",&get_alias   ,1 ,1,NULL, "Gets alias of a tag"},
-	{"get-children" ,"gc",&get_children,1 ,1,NULL, "Gets children of a tag"},
-	{"get-tags"     ,"gt",&get_hash    ,1 ,1,NULL, "Get tags from hash"},
-	{"get-ext"      ,"ge",&get_ext     ,1 ,1,NULL, "Gets all extended tags related to a given tag"},
-	{"add-alias"    ,"aa",&add_alias   ,2,-1,NULL, "Adds alias to a tag"},
-	{"add-parent"   ,"ap",&add_parent  ,2,-1,NULL, "Adds parent to tag"},
-	{"add-child"    ,"ac",&add_child   ,2,-1,NULL, "Adds child to tag"},
-	{"remove-ext"   ,"re",&remove_ext  ,2,-1,NULL, "Removes relation between tags"},
-	{"remove-tag"   ,"rt",&remove_tag  ,2,-1,NULL, "Removes tag from file"},
-	/*{"export-files" ,"e" ,&export      ,0, 0,NULL, "exports all files in database"},*/
-	{"merge"        ,"m" ,&merge       ,2,-1,NULL, "merges two files"},
-	{"prune"        ,"p" ,&prune_tags  ,0, 0,NULL, "prunes unused tags from database"},
+	{"help"         ,"h" ,&help        ,0,-1, "Prints help message"},
+	{"create"       ,"c" ,&create      ,0,-1, "Creates a database"},
+	{"version"      ,"v" ,&version     ,0,-1, "Shows database Version"},
+	{"add"          ,"a" ,&add         ,1,-1, "Adds file to database"},
+	{"add-tag"      ,"at",&add_tag     ,2,-1, "Adds tag to file"},
+	{"search"       ,"s" ,&search      ,1,-1, "Searches for files by tags"},
+	{"list-hashes"  ,"lh",&list_hash   ,0 ,0, "Lists all file hashes"},
+	{"get-alias"    ,"ga",&get_alias   ,1 ,1, "Gets alias of a tag"},
+	{"get-children" ,"gc",&get_children,1 ,1, "Gets children of a tag"},
+	{"get-tags"     ,"gt",&get_hash    ,1 ,1, "Get tags from hash"},
+	{"get-ext"      ,"ge",&get_ext     ,1 ,1, "Gets all extended tags related to a given tag"},
+	{"add-alias"    ,"aa",&add_alias   ,2,-1, "Adds alias to a tag"},
+	{"add-parent"   ,"ap",&add_parent  ,2,-1, "Adds parent to tag"},
+	{"add-child"    ,"ac",&add_child   ,2,-1, "Adds child to tag"},
+	{"remove-ext"   ,"re",&remove_ext  ,2,-1, "Removes relation between tags"},
+	{"remove-tag"   ,"rt",&remove_tag  ,2,-1, "Removes tag from file"},
+	/*{"export-files" ,"e" ,&export      ,0, 0, "exports all files in database"},*/
+	{"merge"        ,"m" ,&merge       ,2,-1, "merges two files"},
+	{"prune"        ,"p" ,&prune_tags  ,0, 0, "prunes unused tags from database"},
 };
 
-const int command_length = sizeof(commands)/sizeof(commands[0]);
+const int command_length = LENGTH(commands);
 
 static PyrosDB*
 open_db(char *path){

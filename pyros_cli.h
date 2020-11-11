@@ -4,27 +4,23 @@
 #define ERROR fprintf(stderr,"%s: ",ExecName);fprintf
 #define UNUSED(x) (void)(x)
 #define ARGCHECK(arg,argsmall,argcheck) !strcmp(arg,argcheck) || !strcmp(argsmall,argcheck)
+#define LENGTH(x) sizeof(x)/sizeof(x[0])
 
 
 #define TRUE (1==1)
 #define FALSE !TRUE
 
-enum FlagType{
-	FLAG_VAR,
-	FLAG_FUNC
-};
-
-typedef void (*FlagFunc)(int argc,char *argv[],int flag_index);
 typedef void (*Command)(int argc,char **argv);
+
+enum GLOBAL_FLAGS{
+	GLOBAL_HELP_FLAG = 0x01,
+	GLOBAL_DIR_FLAG  = 0x02,
+};
 
 struct Flag{
 	char shortName;
 	const char *longName;
-	enum FlagType type;
-	union{
-		int value;
-		FlagFunc func;
-	} flag;
+	int value;
 };
 
 struct Cmd{
@@ -33,9 +29,9 @@ struct Cmd{
 	Command func;
 	int minArgs;
 	int maxArgs;
-	struct Flag *flag;
 	const char *description;
 };
+
 
 void print_error(char *,const void*);
 #endif

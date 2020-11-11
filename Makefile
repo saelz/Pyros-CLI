@@ -1,9 +1,8 @@
-WARNINGS=-Wall -Werror -Wextra -Wdeclaration-after-statement
-
 BUILD_NAME = pyros
 LIBS = '-lpyros'
 
-CFLAGS=$(WARNINGS) -std=c99 -pedantic
+CFLAGS +=-Wall -Werror -Wextra -Wdeclaration-after-statement
+CFLAGS +=-std=c99 -pedantic -g
 
 LDFLAGS=$(LIBS)
 
@@ -16,7 +15,7 @@ all: $(BUILD_NAME)
 	$(CC) -c -o $(@F) $(CFLAGS) $<
 
 $(BUILD_NAME): $(OBJS)
-	$(CC) -o $(@F) $(OBJS) $(LDFLAGS)
+	$(CC) -o $(@F) $^ $(LDFLAGS)
 
 clean:
 	rm $(OBJS)

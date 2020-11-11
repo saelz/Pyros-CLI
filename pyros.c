@@ -19,90 +19,20 @@ extern const struct Cmd commands[];
 extern const int command_length;
 
 char const* ExecName;
-const struct Cmd *current_cmd;
 
 char *PDB_PATH = NULL;
-
-static void
-use_flag(int argc, char **argv,int index,struct Flag flag){
-	if (flag.type == FLAG_FUNC){
-		flag.flag.func(argc,argv,index);
-	} else {
-		/* TODO */
-	}
-}
-
-static void
-compare_flag(int argc, char **argv,int index,struct Flag *flag,int flag_count,int useLongName){
-	int i;
-
-	for (i = 0; i < flag_count; i++){
-		if (useLongName){
-			if (!strcmp(flag[i].longName,argv[index]+2)){
-				use_flag(argc,argv,index,flag[i]);
-				return;
-			}
-		} else {
-			for(int j = 1; argv[index][j] != '\0';j++){
-				if (flag[i].shortName == argv[index][j]){
-					use_flag(argc,argv,index,flag[i]);
-					return;
-				}
-			}
-		}
-	}
-	ERROR(stderr,"unknown flag \"%s\"\n",argv[index]);
-	exit(1);
-}
-
-static void
-findFlags(int argc, char **argv,struct Flag *flag,int flag_count){
-	int i;
-
-	for (i = 1; i < argc; i++){
-		if (argv[i] == NULL)
-			continue;
-		if (!strcmp(argv[i], "--")){
-			compare_flag(argc,argv,i,flag,flag_count, TRUE);
-			argv[i] = NULL;
-			break;
-		} else if (argv[i][0] == '-'){
-			compare_flag(argc,argv,i,flag,flag_count, FALSE);
-			argv[i] = NULL;
-		}
-	}
-}
+int global_flags = 0;
 
 static const struct Cmd *
-findCmd(const struct Cmd *commands,int argc, char**argv,int cmd_count){
-	int i,j;
+cmp_cmd(const struct Cmd *commands,int cmd_count,char *text){
 
-	for (i = 1; i < argc; i++){
-		if (argv[i][0] != '-'){
-			for (j = 0; j < cmd_count; j++){
-				if (ARGCHECK(commands[j].shortName,commands[j].longName,argv[i])){
-					argv[i] = NULL;
-					return &commands[j];
-				}
-			}
-			ERROR(stderr,"Unknown Command \"%s\"\n",argv[i]);
-			exit(1);
+	for (int j = 0; j < cmd_count; j++){
+		if (ARGCHECK(commands[j].shortName,commands[j].longName,text)){
+			return &commands[j];
 		}
 	}
 
 	return NULL;
-}
-
-static void
-findCmdArgs(char **cmd_args, int *cmd_arg_count, int argc, char **argv){
-	int i;
-
-	for (i = 1; i < argc; i++){
-		if (argv[i] != NULL){
-			cmd_args[*cmd_arg_count] = argv[i];
-			(*cmd_arg_count)++;
-		}
-	}
 }
 
 static void
@@ -132,95 +62,166 @@ get_database_path(){
 }
 
 static void
-help(int argc,char *argv[],int index){
-	UNUSED(argc);
-	UNUSED(argv);
-	UNUSED(index);
+help(const struct Cmd *cmd){
 
-	if (current_cmd == NULL){
-		commands[0].func(argc,argv);
+	if (cmd == NULL){
+		commands[0].func(0,NULL);
 	} else {
 		printf("COMMAND: %s %s \n\t%s\n",
-			   current_cmd->longName,current_cmd->shortName,
-			   current_cmd->description);
+			   cmd->longName,cmd->shortName,
+			   cmd->description);
 	}
 	exit(0);
 
 }
 
 static void
-get_dir(int argc,char *argv[],int index){
+set_dir(char *dir){
 	const char *homedir;
-
-	if (index+1 >= argc){
-		ERROR(stderr,"no directory supplied\n");
-		exit(1);
-	}
 
 	if ((homedir = getenv("HOME")) != NULL)
 		homedir = getpwuid(getuid())->pw_dir;
 
-	if (argv[index+1][0] == '~'){
-		PDB_PATH = malloc(strlen(homedir)+strlen(argv[index+1])+1);
+	if (dir[0] == '~'){
+		PDB_PATH = malloc(strlen(homedir)+strlen(dir)+1);
 		strcpy(PDB_PATH,homedir);
-		strcat(PDB_PATH,argv[index+1]+1);
+		strcat(PDB_PATH,dir+1);
 	} else {
-		PDB_PATH = malloc(strlen(argv[index+1])+1);
-		strcpy(PDB_PATH,argv[index+1]);
+		PDB_PATH = malloc(strlen(dir)+1);
+		strcpy(PDB_PATH,dir);
 	}
-	argv[index+1] = NULL;
+}
+
+static char
+cmp_short_flags(struct Flag *flags,int flag_count,char *text){
+	int length = strlen(text);
+	for (int i = 0; i < length; i++) {
+		for (int j = 0; j < flag_count; j++) {
+			if (text[i] == flags[j].shortName){
+				global_flags |= flags[j].value;
+				goto next;
+			}
+		}
+		return text[i];
+	next:;
+	}
+	return '\0';
+}
+
+static int
+cmp_long_flags(struct Flag *flags,int flag_count,char *text){
+	for (int i = 0; i < flag_count; i++) {
+		if (!strcmp(text, flags[i].longName)){
+			global_flags |= flags[i].value;
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+static void
+check_arg_count(int arg_count,const struct Cmd *cmd){
+	if (cmd->maxArgs != -1 && arg_count > cmd->maxArgs){
+		ERROR(stderr,"command \"%s\""
+			  " can only take %d argument%c %d given\n",
+			  cmd->longName,cmd->maxArgs,
+			  (cmd->maxArgs < 2) ? '\0' : 's',
+			  arg_count);
+		exit(1);
+	} else if (arg_count < cmd->minArgs){
+		ERROR(stderr,"command \"%s\""
+			  " requires at least %d argument%c %d given\n",
+			  cmd->longName,cmd->minArgs,
+			  (cmd->minArgs < 2) ? '\0' : 's',
+			  arg_count);
+		exit(1);
+	}
+}
+
+static void
+parse_input(int argc,char *argv[]){
+	struct Flag gflags[] = {
+		{'h',"help" ,GLOBAL_HELP_FLAG},
+		{'d',"dir"  ,GLOBAL_DIR_FLAG},
+	};
+
+	const struct Cmd *cmd = NULL;
+	char *cmd_args[argc];
+	int cmd_arg_count = 0;
+
+	int ignore_flags  = FALSE;
+
+	for (int i = 1; i < argc; i++) {
+		if (global_flags & GLOBAL_DIR_FLAG){
+			set_dir(argv[i]);
+			global_flags &= ~GLOBAL_DIR_FLAG;
+			continue;
+		}
+
+		/* check for flags */
+		if (!ignore_flags && argv[i][0] == '-'){
+			if (argv[i][1] == '-'){
+				if (argv[i][2] == '\0'){
+					ignore_flags = TRUE;
+					continue;
+				} else if (cmp_long_flags(gflags, LENGTH(gflags),
+										  &argv[i][2])){
+					continue;
+				} else {
+					ERROR(stderr,"Unknown flag \"%s\"",argv[i]);
+					exit(1);
+				}
+			} else {
+				char last_char;
+				if ((last_char = cmp_short_flags(gflags,
+												LENGTH(gflags),
+												 &argv[i][1])) == '\0'){
+					continue;
+				} else {
+					ERROR(stderr,"Unknown flag \"-%c\"",last_char);
+					exit(1);
+				}
+			}
+		}
+
+		/* get command */
+		if (cmd == NULL){
+			if ((cmd=cmp_cmd(commands,command_length,argv[i])) == NULL){
+				if (global_flags & GLOBAL_HELP_FLAG)
+					help(NULL);
+				ERROR(stderr,"Unknown Command \"%s\"\n",argv[i]);
+				exit(1);
+			}
+			continue;
+		}
+
+		cmd_args[cmd_arg_count] = argv[i];
+		cmd_arg_count++;
+	}
+
+	if (global_flags & GLOBAL_HELP_FLAG)
+		help(cmd);
+
+	if (cmd == NULL){
+		ERROR(stderr,"No command given\n");
+		exit(1);
+	}
+
+	if (PDB_PATH == NULL)
+		get_database_path();
+
+	check_arg_count(cmd_arg_count,cmd);
+
+	cmd->func(cmd_arg_count,cmd_args);
+
 }
 
 int
 main(int argc, char *argv[]){
 
-	struct Flag global_flags[] = {
-		{'h',"help" ,FLAG_FUNC,{.func = help}},
-		{'d',"dir"  ,FLAG_FUNC,{.func = get_dir}},
-		/*{'r',"recursive",FLAG_VAR,{&flag_Recursive}},should be function flag for a*/
-	};
-
-
-
-	char *cmd_args[argc];
-	int cmd_arg_count = 0;
-
-
 	ExecName = argv[0];
 
-	current_cmd = findCmd(commands,argc,argv,command_length);
-	findFlags(argc,argv,global_flags,
-			  sizeof(global_flags)/sizeof(global_flags[0]));
-
-	if (current_cmd == NULL){
-		ERROR(stderr,"No command given\n");
-		exit(1);
-	}
-
-	findCmdArgs(cmd_args,&cmd_arg_count,argc,argv);
-
-	/*parse command flags*/
-	if (current_cmd->maxArgs != -1 && cmd_arg_count > current_cmd->maxArgs){
-		ERROR(stderr,"command \"%s\""
-			  " can only take %d argument%c %d given\n",
-			  current_cmd->longName,current_cmd->maxArgs,
-			  (cmd_arg_count != 1) ? '\0' : 's',
-			  cmd_arg_count);
-		exit(1);
-	} else if (cmd_arg_count < current_cmd->minArgs){
-		ERROR(stderr,"command \"%s\""
-			  " requires at least %d argument%c %d given\n",
-			  current_cmd->longName,current_cmd->minArgs,
-			  (cmd_arg_count != 1) ? '\0' : 's',
-			  cmd_arg_count);
-		exit(1);
-	}
-
-
-	if (PDB_PATH == NULL)
-		get_database_path();
-
-	current_cmd->func(cmd_arg_count,cmd_args);
+	parse_input(argc, argv);
 
 	free(PDB_PATH);
 
