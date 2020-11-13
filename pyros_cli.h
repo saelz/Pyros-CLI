@@ -17,6 +17,11 @@ enum GLOBAL_FLAGS{
 	GLOBAL_DIR_FLAG  = 0x02,
 };
 
+enum COMMAND_FLAGS{
+	CMD_HASH_FLAG      = 0x01,
+	CMD_RECURSIVE_FLAG = 0x02,
+};
+
 struct Flag{
 	char shortName;
 	const char *longName;
@@ -29,6 +34,7 @@ struct Cmd{
 	Command func;
 	int minArgs;
 	int maxArgs;
+	int supported_flags;
 	const char *description;
 };
 

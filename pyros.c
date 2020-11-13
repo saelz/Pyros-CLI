@@ -13,7 +13,6 @@
 
 
 
-int flags;
 
 extern const struct Cmd commands[];
 extern const int command_length;
@@ -22,6 +21,7 @@ char const* ExecName;
 
 char *PDB_PATH = NULL;
 int global_flags = 0;
+int flags    = 0;
 
 static const struct Cmd *
 cmp_cmd(const struct Cmd *commands,int cmd_count,char *text){
@@ -93,12 +93,12 @@ set_dir(char *dir){
 }
 
 static char
-cmp_short_flags(struct Flag *flags,int flag_count,char *text){
+cmp_short_flags(struct Flag *flags,int flag_count,int* set_flags,char *text){
 	int length = strlen(text);
 	for (int i = 0; i < length; i++) {
 		for (int j = 0; j < flag_count; j++) {
 			if (text[i] == flags[j].shortName){
-				global_flags |= flags[j].value;
+				(*set_flags) |= flags[j].value;
 				goto next;
 			}
 		}
@@ -109,10 +109,10 @@ cmp_short_flags(struct Flag *flags,int flag_count,char *text){
 }
 
 static int
-cmp_long_flags(struct Flag *flags,int flag_count,char *text){
+cmp_long_flags(struct Flag *flags,int flag_count,int* set_flags,char *text){
 	for (int i = 0; i < flag_count; i++) {
 		if (!strcmp(text, flags[i].longName)){
-			global_flags |= flags[i].value;
+			(*set_flags) |= flags[i].value;
 			return TRUE;
 		}
 	}
@@ -144,6 +144,9 @@ parse_input(int argc,char *argv[]){
 		{'h',"help" ,GLOBAL_HELP_FLAG},
 		{'d',"dir"  ,GLOBAL_DIR_FLAG},
 	};
+	struct Flag cmdflags[] = {
+		{'H',"show-hash",CMD_HASH_FLAG},
+	};
 
 	const struct Cmd *cmd = NULL;
 	char *cmd_args[argc];
@@ -163,25 +166,32 @@ parse_input(int argc,char *argv[]){
 			if (argv[i][1] == '-'){
 				if (argv[i][2] == '\0'){
 					ignore_flags = TRUE;
-					continue;
-				} else if (cmp_long_flags(gflags, LENGTH(gflags),
+				} else if (cmp_long_flags(cmdflags, LENGTH(cmdflags),
+										  &flags,
 										  &argv[i][2])){
-					continue;
+				} else if (cmp_long_flags(gflags, LENGTH(gflags),
+										  &global_flags,
+										  &argv[i][2])){
 				} else {
-					ERROR(stderr,"Unknown flag \"%s\"",argv[i]);
+					ERROR(stderr,"Unknown flag \"%s\"\n",argv[i]);
 					exit(1);
 				}
 			} else {
 				char last_char;
-				if ((last_char = cmp_short_flags(gflags,
-												LENGTH(gflags),
-												 &argv[i][1])) == '\0'){
-					continue;
+				if (cmp_short_flags(cmdflags,
+									LENGTH(cmdflags),
+									&flags,
+									&argv[i][1]) == '\0'){
+				}else if ((last_char = cmp_short_flags(gflags,
+													   LENGTH(gflags),
+													   &global_flags,
+													   &argv[i][1])) == '\0'){
 				} else {
-					ERROR(stderr,"Unknown flag \"-%c\"",last_char);
+					ERROR(stderr,"Unknown flag \"-%c\"\n",last_char);
 					exit(1);
 				}
 			}
+			continue;
 		}
 
 		/* get command */
@@ -205,6 +215,17 @@ parse_input(int argc,char *argv[]){
 	if (cmd == NULL){
 		ERROR(stderr,"No command given\n");
 		exit(1);
+	}
+
+	if ((~cmd->supported_flags & flags) != 0){
+		for (size_t i = 0; i < LENGTH(cmdflags); i++) {
+			if (cmdflags[i].value & flags){
+				ERROR(stderr,"argument \"%s\" not applicable to command \"%s\"\n",
+					  cmdflags[i].longName,cmd->longName);
+				exit(1);
+			}
+		}
+
 	}
 
 	if (PDB_PATH == NULL)

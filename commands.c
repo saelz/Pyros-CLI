@@ -29,35 +29,142 @@ DECLARE(prune_tags);
 DECLARE(add_tag);
 
 
+
 extern char *PDB_PATH;
 extern const char* ExecName;
-
-extern int flag_Recursive;
-extern int set_flags;
+extern int flags;
 
 typedef void(*foreach)(PyrosDB*, const char*, const char*);
 
 
 const struct Cmd commands[] = {
-	{"help"         ,"h" ,&help        ,0,-1, "Prints help message"},
-	{"create"       ,"c" ,&create      ,0,-1, "Creates a database"},
-	{"version"      ,"v" ,&version     ,0,-1, "Shows database Version"},
-	{"add"          ,"a" ,&add         ,1,-1, "Adds file to database"},
-	{"add-tag"      ,"at",&add_tag     ,2,-1, "Adds tag to file"},
-	{"search"       ,"s" ,&search      ,1,-1, "Searches for files by tags"},
-	{"list-hashes"  ,"lh",&list_hash   ,0 ,0, "Lists all file hashes"},
-	{"get-alias"    ,"ga",&get_alias   ,1 ,1, "Gets alias of a tag"},
-	{"get-children" ,"gc",&get_children,1 ,1, "Gets children of a tag"},
-	{"get-tags"     ,"gt",&get_hash    ,1 ,1, "Get tags from hash"},
-	{"get-ext"      ,"ge",&get_ext     ,1 ,1, "Gets all extended tags related to a given tag"},
-	{"add-alias"    ,"aa",&add_alias   ,2,-1, "Adds alias to a tag"},
-	{"add-parent"   ,"ap",&add_parent  ,2,-1, "Adds parent to tag"},
-	{"add-child"    ,"ac",&add_child   ,2,-1, "Adds child to tag"},
-	{"remove-ext"   ,"re",&remove_ext  ,2,-1, "Removes relation between tags"},
-	{"remove-tag"   ,"rt",&remove_tag  ,2,-1, "Removes tag from file"},
-	/*{"export-files" ,"e" ,&export      ,0, 0, "exports all files in database"},*/
-	{"merge"        ,"m" ,&merge       ,2,-1, "merges two files"},
-	{"prune"        ,"p" ,&prune_tags  ,0, 0, "prunes unused tags from database"},
+	{
+		"help", "h",
+		&help,
+		0,-1,
+		0,
+		"Prints help message"
+	},
+	{
+		"create", "c",
+		&create,
+		0,-1,
+		0,
+		"Creates a database"
+	},
+	{
+		"version", "v",
+		&version ,
+		0,-1
+		,0,
+		"Shows database Version"
+	},
+
+	{
+		"add", "a"
+		,&add,
+		1,-1,
+		0,
+		"Adds file to database"
+	},
+	{
+		"add-tag" ,"at",
+		&add_tag,
+		2,-1,
+		0,
+		"Adds tag to file"
+	},
+	{
+		"search" ,"s" ,
+		&search,
+		1,-1,
+		CMD_HASH_FLAG,
+		"Searches for files by tags"
+	},
+	{
+		"list-hashes" ,"lh",
+		&list_hash,
+		0 ,0,
+		0,
+		"Lists all file hashes"
+	},
+	{
+		"get-alias" ,"ga",
+		&get_alias,
+		1 ,1,
+		0,
+		"Gets alias of a tag"
+	},
+	{
+		"get-children" ,"gc",
+		&get_children,
+		1 ,1,
+		0,
+		"Gets children of a tag"
+	},
+	{
+		"get-tags" ,"gt",
+		&get_hash ,
+		1 ,1,
+		0,
+		"Get tags from hash"
+	},
+	{
+		"get-ext" ,"ge",
+		&get_ext,
+		1 ,1,
+		0,
+		"Gets all extended tags related to a given tag"
+	},
+	{
+		"add-alias" ,"aa",
+		&add_alias,
+		2,-1,
+		0,
+		"Adds alias to a tag"
+	},
+	{
+		"add-parent" ,"ap",
+		&add_parent ,
+		2,-1,
+		0,
+		"Adds parent to tag"
+	},
+	{
+		"add-child" ,"ac",
+		&add_child ,
+		2,-1,
+		0,
+	 "Adds child to tag"
+	},
+	{
+		"remove-ext" ,"re",
+		&remove_ext ,
+		2,-1,
+		0,
+		"Removes relation between tags"
+	},
+	{
+		"remove-tag" ,"rt",
+		&remove_tag ,
+		2,-1,
+		0,
+		"Removes tag from file"
+	},
+	{
+		"merge" ,"m" ,
+		&merge,
+		2,-1,
+		0,
+		"merges two files"
+	},
+	{
+		"prune" ,"p" ,
+		&prune_tags ,
+		0, 0,
+		0,
+		"prunes unused tags from database"
+	},
 };
 
 const int command_length = LENGTH(commands);
@@ -68,7 +175,7 @@ open_db(char *path){
 	if (Pyros_Database_Exists(path)){
 		pyrosDB = Pyros_Open_Database(PDB_PATH);
 	} else {
-		ERROR(stderr,"database \"%s\" does not exist use create command first",path);
+		ERROR(stderr,"database \"%s\" does not exist use create command first\n",path);
 		exit(1);
 	}
 	return pyrosDB;
@@ -110,7 +217,7 @@ static void
 PrintFileList(PyrosList *pList){
 	PyrosFile **pFile = (PyrosFile**)pList->list;
 	while (*pFile){
-		if (FALSE)//TODO
+		if (flags & CMD_HASH_FLAG)
 			printf("%s\n",(*pFile)->hash);
 		else
 			printf("%s\n",(*pFile)->path);
@@ -244,8 +351,7 @@ export(int argc, char **argv){
 	UNUSED(argc);
 	UNUSED(argv);
 
-	printf("lol...");
-	}*/
+}*/
 
 static void
 search(int argc, char **argv){
