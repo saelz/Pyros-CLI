@@ -146,6 +146,7 @@ parse_input(int argc,char *argv[]){
 	};
 	struct Flag cmdflags[] = {
 		{'H',"show-hash",CMD_HASH_FLAG},
+		{'r',"recursive",CMD_RECURSIVE_FLAG},
 	};
 
 	const struct Cmd *cmd = NULL;
@@ -220,7 +221,7 @@ parse_input(int argc,char *argv[]){
 	if ((~cmd->supported_flags & flags) != 0){
 		for (size_t i = 0; i < LENGTH(cmdflags); i++) {
 			if (cmdflags[i].value & flags){
-				ERROR(stderr,"argument \"%s\" not applicable to command \"%s\"\n",
+				ERROR(stderr,"flag \"%s\" not applicable to command \"%s\"\n",
 					  cmdflags[i].longName,cmd->longName);
 				exit(1);
 			}

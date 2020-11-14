@@ -64,7 +64,7 @@ const struct Cmd commands[] = {
 		"add", "a"
 		,&add,
 		1,-1,
-		0,
+		CMD_RECURSIVE_FLAG,
 		"Adds file to database"
 	},
 	{
@@ -312,8 +312,7 @@ add(int argc, char **argv){
 	PyrosDB *pyrosDB = open_db(PDB_PATH);
 
 	getFilesFromArgs(tags,files,dirs,argc,argv);
-	/*getDirContents(files,dirs,Recursive);*/
-	getDirContents(files,dirs,TRUE);
+	getDirContents(files,dirs,flags & CMD_RECURSIVE_FLAG);
 
 	if (files->length == 0){
 		ERROR(stderr,"no valid files given\n");
