@@ -25,6 +25,8 @@ enum COMMAND_FLAGS{
 struct Flag{
 	char shortName;
 	const char *longName;
+	const char *desc;
+	const char *usage;
 	int value;
 };
 
@@ -36,6 +38,7 @@ struct Cmd{
 	int maxArgs;
 	int supported_flags;
 	const char *description;
+	const char *usage;
 };
 
 

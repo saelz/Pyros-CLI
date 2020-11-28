@@ -33,6 +33,8 @@ DECLARE(add_tag);
 extern char *PDB_PATH;
 extern const char* ExecName;
 extern int flags;
+extern struct Flag gflags[];
+extern size_t gflags_len;
 
 typedef void(*foreach)(PyrosDB*, const char*, const char*);
 
@@ -43,21 +45,24 @@ const struct Cmd commands[] = {
 		&help,
 		0,-1,
 		0,
-		"Prints help message"
+		"Prints help message",
+		"[command]"
 	},
 	{
 		"create", "c",
 		&create,
 		0,-1,
 		0,
-		"Creates a database"
+		"Creates a database",
+		""
 	},
 	{
 		"version", "v",
 		&version ,
 		0,-1
 		,0,
-		"Shows database Version"
+		"Shows database Version",
+		""
 	},
 
 	{
@@ -65,105 +70,120 @@ const struct Cmd commands[] = {
 		,&add,
 		1,-1,
 		CMD_RECURSIVE_FLAG,
-		"Adds file to database"
+		"Adds file(s) to database",
+		"(file | directory)... [tag]..."
 	},
 	{
 		"add-tag" ,"at",
 		&add_tag,
 		2,-1,
 		0,
-		"Adds tag to file"
+		"Adds tag to file",
+		"<hash> <tag>..."
 	},
 	{
 		"search" ,"s" ,
 		&search,
 		1,-1,
 		CMD_HASH_FLAG,
-		"Searches for files by tags"
+		"Searches for files by tags",
+		"(tag)..."
 	},
 	{
 		"list-hashes" ,"lh",
 		&list_hash,
 		0 ,0,
 		0,
-		"Lists all file hashes"
+		"Lists all file hashes",
+		""
 	},
 	{
 		"get-alias" ,"ga",
 		&get_alias,
 		1 ,1,
 		0,
-		"Gets alias of a tag"
+		"Gets alias of a tag",
+		"(tag)"
 	},
 	{
 		"get-children" ,"gc",
 		&get_children,
 		1 ,1,
 		0,
-		"Gets children of a tag"
+		"Gets children of a tag",
+		"(tag)"
 	},
 	{
 		"get-tags" ,"gt",
 		&get_hash ,
 		1 ,1,
 		0,
-		"Get tags from hash"
+		"Get tags from hash",
+		"(hash)"
 	},
 	{
 		"get-ext" ,"ge",
 		&get_ext,
 		1 ,1,
 		0,
-		"Gets all extended tags related to a given tag"
+		"Recursivly retrives all children and alias tags",
+		"(tag)"
 	},
 	{
 		"add-alias" ,"aa",
 		&add_alias,
 		2,-1,
 		0,
-		"Adds alias to a tag"
+		"Adds alias to a tag",
+		"(tag) (tag)..."
 	},
 	{
 		"add-parent" ,"ap",
 		&add_parent ,
 		2,-1,
 		0,
-		"Adds parent to tag"
+		"Adds parent to tag",
+		"<child_tag> <parent_tag>..."
 	},
 	{
 		"add-child" ,"ac",
 		&add_child ,
 		2,-1,
 		0,
-	 "Adds child to tag"
+		"Adds child to tag",
+		"<parent_tag> <child_tag>..."
 	},
 	{
 		"remove-ext" ,"re",
 		&remove_ext ,
 		2,-1,
 		0,
-		"Removes relation between tags"
+		"Removes relationships from a tags",
+		"<tag> (tag)..."
 	},
 	{
 		"remove-tag" ,"rt",
 		&remove_tag ,
 		2,-1,
 		0,
-		"Removes tag from file"
+		"Removes tag from file",
+		"<hash> <tag>..."
 	},
 	{
 		"merge" ,"m" ,
 		&merge,
 		2,-1,
 		0,
-		"merges two files"
+		"merges file into another one",
+		"<master_hash> <merged_hash>..."
 	},
 	{
 		"prune" ,"p" ,
 		&prune_tags ,
 		0, 0,
 		0,
-		"prunes unused tags from database"
+		"prunes unused tags from database",
+		""
 	},
 };
 
@@ -278,6 +298,7 @@ create(int argc, char **argv){
 	}
 }
 
+
 static void
 help(int argc, char **argv){
 	int i;
@@ -285,12 +306,19 @@ help(int argc, char **argv){
 	UNUSED(argc);
 	UNUSED(argv);
 
-	printf("Usage: %s [COMMAND] [ARGUMENTS]\n\n",ExecName);
+	printf("Usage: %s <command> [options]\n\n",ExecName);
 
-	printf("COMMANDS\n");
+	printf("COMMANDS:\n");
 	for(i = 0; i < command_length; i++){
-		printf("\t%-13s %-4s %s\n",
+		printf("  %-13s %-4s %s\n",
 			   commands[i].longName,commands[i].shortName,commands[i].description);
+	}
+
+	printf("\nOPTIONS:\n");
+	for (size_t i = 0; i < gflags_len;i++){
+		printf("  -%c --%s %s\t%s\n",
+			   gflags[i].shortName,gflags[i].longName,
+			   gflags[i].usage,gflags[i].desc);
 	}
 	printf("\n");
 	version(argc,argv);

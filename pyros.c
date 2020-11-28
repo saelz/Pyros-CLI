@@ -23,6 +23,39 @@ char *PDB_PATH = NULL;
 int global_flags = 0;
 int flags    = 0;
 
+struct Flag gflags[] = {
+	{
+		'h',"help",
+		"shows help page for command",
+		"",
+		GLOBAL_HELP_FLAG
+	},
+	{
+		'd',"dir" ,
+		"sets database to use",
+		"<database_directory>",
+		GLOBAL_DIR_FLAG
+	},
+};
+
+size_t gflags_len = LENGTH(gflags);
+
+struct Flag cmdflags[] = {
+	{
+		'H',"show-hash",
+		"returns file hases instead of file paths",
+		"",
+		CMD_HASH_FLAG
+	},
+	{
+		'r',
+		"recursive",
+		"gets all files recursivly in directory",
+		"",
+		CMD_RECURSIVE_FLAG
+	},
+};
+
 static const struct Cmd *
 cmp_cmd(const struct Cmd *commands,int cmd_count,char *text){
 
@@ -67,9 +100,21 @@ help(const struct Cmd *cmd){
 	if (cmd == NULL){
 		commands[0].func(0,NULL);
 	} else {
-		printf("COMMAND: %s %s \n\t%s\n",
+		/*printf("COMMAND: %s %s \n  %s\n",
 			   cmd->longName,cmd->shortName,
-			   cmd->description);
+			   cmd->description);*/
+		printf("USAGE:\n  %s <%s | %s> [options] %s\n\n%s\n",
+			   ExecName,cmd->longName,cmd->shortName,cmd->usage,
+			cmd->description);
+		if (cmd->supported_flags != 0){
+			printf("\nOPTIONS:\n");
+			for (size_t i = 0; i < LENGTH(cmdflags);i++){
+				if (cmd->supported_flags & cmdflags[i].value)
+					printf("  -%c --%s %s\t%s\n",
+						   cmdflags[i].shortName,cmdflags[i].longName,
+						   cmdflags[i].usage,cmdflags[i].desc);
+			}
+		}
 	}
 	exit(0);
 
@@ -140,14 +185,7 @@ check_arg_count(int arg_count,const struct Cmd *cmd){
 
 static void
 parse_input(int argc,char *argv[]){
-	struct Flag gflags[] = {
-		{'h',"help" ,GLOBAL_HELP_FLAG},
-		{'d',"dir"  ,GLOBAL_DIR_FLAG},
-	};
-	struct Flag cmdflags[] = {
-		{'H',"show-hash",CMD_HASH_FLAG},
-		{'r',"recursive",CMD_RECURSIVE_FLAG},
-	};
+
 
 	const struct Cmd *cmd = NULL;
 	char *cmd_args[argc];
