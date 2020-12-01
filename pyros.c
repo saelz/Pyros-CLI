@@ -31,9 +31,9 @@ struct Flag gflags[] = {
 		GLOBAL_HELP_FLAG
 	},
 	{
-		'd',"dir" ,
+		'd',"database" ,
 		"sets database to use",
-		"<database_directory>",
+		"<dir>",
 		GLOBAL_DIR_FLAG
 	},
 };
@@ -212,7 +212,7 @@ parse_input(int argc,char *argv[]){
 										  &global_flags,
 										  &argv[i][2])){
 				} else {
-					ERROR(stderr,"Unknown flag \"%s\"\n",argv[i]);
+					ERROR(stderr,"Unknown option \"%s\"\n",argv[i]);
 					exit(1);
 				}
 			} else {
@@ -226,7 +226,7 @@ parse_input(int argc,char *argv[]){
 													   &global_flags,
 													   &argv[i][1])) == '\0'){
 				} else {
-					ERROR(stderr,"Unknown flag \"-%c\"\n",last_char);
+					ERROR(stderr,"Unknown option \"-%c\"\n",last_char);
 					exit(1);
 				}
 			}
@@ -259,7 +259,7 @@ parse_input(int argc,char *argv[]){
 	if ((~cmd->supported_flags & flags) != 0){
 		for (size_t i = 0; i < LENGTH(cmdflags); i++) {
 			if (cmdflags[i].value & flags){
-				ERROR(stderr,"flag \"%s\" not applicable to command \"%s\"\n",
+				ERROR(stderr,"option \"%s\" not applicable to command \"%s\"\n",
 					  cmdflags[i].longName,cmd->longName);
 				exit(1);
 			}

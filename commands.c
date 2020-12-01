@@ -314,12 +314,13 @@ help(int argc, char **argv){
 			   commands[i].longName,commands[i].shortName,commands[i].description);
 	}
 
-	printf("\nOPTIONS:\n");
+	printf("\nGLOBAL OPTIONS:\n");
 	for (size_t i = 0; i < gflags_len;i++){
-		printf("  -%c --%s %s\t%s\n",
+		printf("  -%c --%s\t %s\t%s\n",
 			   gflags[i].shortName,gflags[i].longName,
 			   gflags[i].usage,gflags[i].desc);
 	}
+	printf("  -- \t\t\tall further arguments starting with '-' won't be treated as options\n");
 	printf("\n");
 	version(argc,argv);
 }
