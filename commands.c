@@ -16,6 +16,7 @@ DECLARE(search);
 DECLARE(list_hash);
 DECLARE(get_alias);
 DECLARE(get_children);
+DECLARE(get_parents);
 DECLARE(get_hash);
 DECLARE(get_ext);
 DECLARE(add_alias);
@@ -111,6 +112,14 @@ const struct Cmd commands[] = {
 		1 ,1,
 		0,
 		"Gets children of a tag",
+		"(tag)"
+	},
+	{
+		"get-parents" ,"gp",
+		&get_parents,
+		1 ,1,
+		0,
+		"Gets parents of a tag",
 		"(tag)"
 	},
 	{
@@ -414,6 +423,15 @@ get_children(int argc, char **argv){
 	UNUSED(argc);
 
 	PrintList(Pyros_Get_Children(pyrosDB,argv[0]));
+	Pyros_Close_Database(pyrosDB);
+}
+
+static void
+get_parents(int argc, char **argv){
+	PyrosDB *pyrosDB = open_db(PDB_PATH);
+	UNUSED(argc);
+
+	PrintList(Pyros_Get_Parents(pyrosDB,argv[0]));
 	Pyros_Close_Database(pyrosDB);
 }
 
