@@ -24,6 +24,7 @@ DECLARE(add_parent);
 DECLARE(add_child);
 DECLARE(remove_relationship);
 DECLARE(remove_tag);
+DECLARE(remove_file);
 DECLARE(merge);
 /*DECLARE(export);*/
 DECLARE(prune_tags);
@@ -177,6 +178,14 @@ const struct Cmd commands[] = {
 		0,
 		"Removes tag from file",
 		"<hash> <tag>..."
+	},
+	{
+		"remove-file" ,"rf",
+		&remove_file ,
+		1,-1,
+		0,
+		"Removes file",
+		"(hash)..."
 	},
 	{
 		"merge" ,"m" ,
@@ -470,6 +479,20 @@ remove_relationship(int argc, char **argv){
 static void
 remove_tag(int argc, char **argv){
 	forEachChild(argc,argv,Pyros_Remove_Tag_From_Hash);
+}
+
+static void
+remove_file(int argc, char **argv){
+	PyrosDB *pyrosDB = open_db(PDB_PATH);
+
+	for(int i = 0;i < argc;i++){
+		PyrosFile *pFile = Pyros_Get_File_From_Hash(pyrosDB, argv[i]);
+		if (pFile != NULL)
+			Pyros_Remove_File(pyrosDB,pFile);
+	}
+
+	commit(pyrosDB);
+	Pyros_Close_Database(pyrosDB);
 }
 
 static void
