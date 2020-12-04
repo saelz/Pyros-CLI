@@ -18,11 +18,11 @@ DECLARE(get_alias);
 DECLARE(get_children);
 DECLARE(get_parents);
 DECLARE(get_hash);
-DECLARE(get_ext);
+DECLARE(get_related);
 DECLARE(add_alias);
 DECLARE(add_parent);
 DECLARE(add_child);
-DECLARE(remove_ext);
+DECLARE(remove_relationship);
 DECLARE(remove_tag);
 DECLARE(merge);
 /*DECLARE(export);*/
@@ -131,8 +131,8 @@ const struct Cmd commands[] = {
 		"(hash)"
 	},
 	{
-		"get-ext" ,"ge",
-		&get_ext,
+		"get-related" ,"gr",
+		&get_related,
 		1 ,1,
 		0,
 		"Recursivly retrives all children and alias tags",
@@ -163,12 +163,12 @@ const struct Cmd commands[] = {
 		"<parent_tag> <child_tag>..."
 	},
 	{
-		"remove-ext" ,"re",
-		&remove_ext ,
+		"remove-relation" ,"rr",
+		&remove_relationship ,
 		2,-1,
 		0,
-		"Removes relationships from a tags",
-		"<tag> (tag)..."
+		"Removes relationships between tags",
+		"(tag) (tag)..."
 	},
 	{
 		"remove-tag" ,"rt",
@@ -211,8 +211,8 @@ open_db(char *path){
 }
 
 static void
-execute(PyrosDB *pyrosDB){
-	if (Pyros_Execute(pyrosDB) != PYROS_OK){
+commit(PyrosDB *pyrosDB){
+	if (Pyros_Commit(pyrosDB) != PYROS_OK){
 		ERROR(stderr,"an error has occurred");
 		exit(1);
 	}
@@ -226,7 +226,7 @@ forEachParent(int argc, char **argv, foreach func){
 	for (i=1; i < argc; i++)
 		func(pyrosDB, argv[i], argv[0]);
 
-	execute(pyrosDB);
+	commit(pyrosDB);
 	Pyros_Close_Database(pyrosDB);
 }
 
@@ -238,7 +238,7 @@ forEachChild(int argc, char **argv, foreach func){
 	for (i=1; i < argc; i++)
 		func(pyrosDB, argv[0], argv[i]);
 
-	execute(pyrosDB);
+	commit(pyrosDB);
 	Pyros_Close_Database(pyrosDB);
 }
 
@@ -271,7 +271,7 @@ PrintList(PyrosList *pList){
 }
 
 static void
-print_exts(PyrosTag** pt,size_t cur,size_t max,int indent){
+print_tag(PyrosTag** pt,size_t cur,size_t max,int indent){
 	size_t i = 0;
 	int j;
 
@@ -285,7 +285,7 @@ print_exts(PyrosTag** pt,size_t cur,size_t max,int indent){
 			else
 				printf("\n");
 
-			print_exts(pt,i,max,indent+1);
+			print_tag(pt,i,max,indent+1);
 		}
 	}
 
@@ -300,7 +300,7 @@ create(int argc, char **argv){
 	//TODO check that database does not exist
 	if (!Pyros_Database_Exists(PDB_PATH)){
 		pyrosDB = Pyros_Create_Database(PDB_PATH,PYROS_BLAKE2BHASH);
-		execute(pyrosDB);
+		commit(pyrosDB);
 		Pyros_Close_Database(pyrosDB);
 	} else {
 		ERROR(stderr,"Database \"%s\" already exists.",PDB_PATH);
@@ -319,7 +319,7 @@ help(int argc, char **argv){
 
 	printf("COMMANDS:\n");
 	for(i = 0; i < command_length; i++){
-		printf("  %-13s %-4s %s\n",
+		printf("  %-15s %-4s %s\n",
 			   commands[i].longName,commands[i].shortName,commands[i].description);
 	}
 
@@ -361,7 +361,7 @@ add(int argc, char **argv){
 				   (char**)tags->list, tags->length,
 				   TRUE,FALSE, NULL, NULL);
 
-	execute(pyrosDB);
+	commit(pyrosDB);
 	Pyros_List_Free(tags,NULL);
 	Pyros_List_Free(files,NULL);
 	Pyros_List_Free(dirs,NULL);
@@ -445,13 +445,13 @@ get_hash(int argc, char **argv){
 }
 
 static void
-get_ext(int argc, char **argv){
+get_related(int argc, char **argv){
 	PyrosList *tags;
 	PyrosDB *pyrosDB = open_db(PDB_PATH);
 
 	UNUSED(argc);
-	tags = Pyros_Get_Ext_Tags_Structured(pyrosDB, argv[0],PYROS_TAG_EXT);
-	print_exts((PyrosTag**)tags->list,-1,tags->length,0);
+	tags = Pyros_Get_Related_Tags(pyrosDB, argv[0],PYROS_SEARCH_RELATIONSHIP);
+	print_tag((PyrosTag**)tags->list,-1,tags->length,0);
 
 	Pyros_List_Free(tags,(Pyros_Free_Callback)Pyros_Free_Tag);
 	Pyros_Close_Database(pyrosDB);
@@ -463,8 +463,8 @@ merge(int argc, char **argv){
 }
 
 static void
-remove_ext(int argc, char **argv){
-	forEachChild(argc,argv,Pyros_Remove_Ext_Tag);
+remove_relationship(int argc, char **argv){
+	forEachChild(argc,argv,Pyros_Remove_Tag_Relationship);
 }
 
 static void
@@ -480,7 +480,7 @@ prune_tags(int argc, char **argv){
 	UNUSED(argv);
 
 	Pyros_Remove_Dead_Tags(pyrosDB);
-	execute(pyrosDB);
+	commit(pyrosDB);
 	Pyros_Close_Database(pyrosDB);
 }
 
@@ -490,6 +490,6 @@ add_tag(int argc, char **argv){
 
 	Pyros_Add_Tag(pyrosDB,argv[0], &argv[1], argc-1);
 
-	execute(pyrosDB);
+	commit(pyrosDB);
 	Pyros_Close_Database(pyrosDB);
 }
