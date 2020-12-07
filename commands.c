@@ -5,6 +5,7 @@
 
 #include "pyros_cli.h"
 #include "files.h"
+#include "tagtree.h"
 
 #define DECLARE(x) static void x(int argc, char **argv)
 
@@ -280,27 +281,6 @@ PrintList(PyrosList *pList){
 }
 
 static void
-print_tag(PyrosTag** pt,size_t cur,size_t max,int indent){
-	size_t i = 0;
-	int j;
-
-	for (; i < max; i++) {
-		if (cur == pt[i]->par){
-			for (j = 0; j < indent;j++)
-				printf(">");
-			printf("%s",pt[i]->tag);
-			if (pt[i]->isAlias)
-				printf(" <A>\n");
-			else
-				printf("\n");
-
-			print_tag(pt,i,max,indent+1);
-		}
-	}
-
-}
-
-static void
 create(int argc, char **argv){
 	PyrosDB *pyrosDB;
 	UNUSED(argc);
@@ -457,10 +437,14 @@ static void
 get_related(int argc, char **argv){
 	PyrosList *tags;
 	PyrosDB *pyrosDB = open_db(PDB_PATH);
+	TagTree *tree;
 
 	UNUSED(argc);
 	tags = Pyros_Get_Related_Tags(pyrosDB, argv[0],PYROS_SEARCH_RELATIONSHIP);
-	print_tag((PyrosTag**)tags->list,-1,tags->length,0);
+
+	tree = PyrosTagToTree((PyrosTag**)tags->list,tags->length);
+	PrintTree(tree);
+	DestroyTree(tree);
 
 	Pyros_List_Free(tags,(Pyros_Free_Callback)Pyros_Free_Tag);
 	Pyros_Close_Database(pyrosDB);

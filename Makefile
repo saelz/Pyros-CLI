@@ -6,7 +6,7 @@ CFLAGS +=-std=c99 -pedantic -g
 
 LDFLAGS=$(LIBS)
 
-SRC=pyros.c files.c commands.c
+SRC=pyros.c files.c commands.c tagtree.c
 OBJS=$(SRC:.c=.o)
 
 all: $(BUILD_NAME)
