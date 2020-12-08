@@ -25,10 +25,10 @@ isFile(const char *path){
 }
 
 void
-getFilesFromArgs(PyrosList *other, PyrosList *files, PyrosList *dirs,size_t argc,
-				 char **argv){
+getFilesFromArgs(PyrosList *other, PyrosList *files, PyrosList *dirs,
+				 size_t argc, char **argv){
 	size_t i;
-	for (i=0; i < argc; i++){
+	for (i = 0; i < argc; i++){
 		if (isDirectory(argv[i]))
 			Pyros_List_Append(dirs,argv[i]);
 		else if(isFile(argv[i]))

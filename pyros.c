@@ -54,6 +54,13 @@ struct Flag cmdflags[] = {
 		"",
 		CMD_RECURSIVE_FLAG
 	},
+	{
+		'i',
+		"input",
+		"read input from stdin",
+		"",
+		CMD_INPUT_FLAG
+	},
 };
 
 static const struct Cmd *
@@ -110,7 +117,7 @@ help(const struct Cmd *cmd){
 			printf("\nOPTIONS:\n");
 			for (size_t i = 0; i < LENGTH(cmdflags);i++){
 				if (cmd->supported_flags & cmdflags[i].value)
-					printf("  -%c --%s %s\t%s\n",
+					printf("  -%c -%-10s %-5s%s\n",
 						   cmdflags[i].shortName,cmdflags[i].longName,
 						   cmdflags[i].usage,cmdflags[i].desc);
 			}
@@ -181,6 +188,55 @@ check_arg_count(int arg_count,const struct Cmd *cmd){
 			  arg_count);
 		exit(1);
 	}
+}
+
+static PyrosList *
+get_args_from_stdin(int cmd_arg_count,char *cmd_args[]){
+	PyrosList *arguments = Pyros_Create_List(cmd_arg_count, sizeof(char*));
+	int arg_capacity = 100;
+	char *arg = malloc(arg_capacity);
+	int cur_pos = 0;
+	int ch;
+
+	for (int i = 0; i < cmd_arg_count; i++) {
+		char *old_arg = malloc(strlen(cmd_args[i])+1);
+		strcpy(old_arg, cmd_args[i]);
+		Pyros_List_Append(arguments, old_arg);
+	}
+
+
+	while((ch = fgetc(stdin)) != EOF){
+		switch (ch) {
+		case '\r':
+			continue;
+		case '\n':
+		case '\0':
+			if (cur_pos != 0){
+				arg[cur_pos] = '\0';
+				Pyros_List_Append(arguments,arg);
+				arg = malloc(arg_capacity);
+			}
+			cur_pos = 0;
+			break;
+		default:
+			arg[cur_pos] = ch;
+			cur_pos++;
+			if (arg_capacity <= cur_pos){
+				arg_capacity *=2;
+				arg = realloc(arg,arg_capacity);
+			}
+			break;
+		}
+	}
+
+	if (cur_pos > 0){
+		arg[cur_pos] = '\0';
+		Pyros_List_Append(arguments, arg);
+	} else {
+		free(arg);
+	}
+
+	return arguments;
 }
 
 static void
@@ -270,9 +326,18 @@ parse_input(int argc,char *argv[]){
 	if (PDB_PATH == NULL)
 		get_database_path();
 
-	check_arg_count(cmd_arg_count,cmd);
 
-	cmd->func(cmd_arg_count,cmd_args);
+	if (flags & CMD_INPUT_FLAG){
+		PyrosList *stdin_args = get_args_from_stdin(cmd_arg_count,cmd_args);
+
+		check_arg_count(stdin_args->length,cmd);
+		cmd->func(stdin_args->length,(char**)stdin_args->list);
+
+		Pyros_List_Free(stdin_args, free);
+	} else {
+		check_arg_count(cmd_arg_count,cmd);
+		cmd->func(cmd_arg_count,cmd_args);
+	}
 
 }
 

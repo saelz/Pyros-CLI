@@ -20,6 +20,7 @@ enum GLOBAL_FLAGS{
 enum COMMAND_FLAGS{
 	CMD_HASH_FLAG      = 0x01,
 	CMD_RECURSIVE_FLAG = 0x02,
+	CMD_INPUT_FLAG     = 0x04,
 };
 
 struct Flag{

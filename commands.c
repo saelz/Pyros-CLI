@@ -27,7 +27,6 @@ DECLARE(remove_relationship);
 DECLARE(remove_tag);
 DECLARE(remove_file);
 DECLARE(merge);
-/*DECLARE(export);*/
 DECLARE(prune_tags);
 DECLARE(add_tag);
 
@@ -72,7 +71,7 @@ const struct Cmd commands[] = {
 		"add", "a"
 		,&add,
 		1,-1,
-		CMD_RECURSIVE_FLAG,
+		CMD_RECURSIVE_FLAG | CMD_INPUT_FLAG,
 		"Adds file(s) to database",
 		"(file | directory)... [tag]..."
 	},
@@ -88,7 +87,7 @@ const struct Cmd commands[] = {
 		"search" ,"s" ,
 		&search,
 		1,-1,
-		CMD_HASH_FLAG,
+		CMD_HASH_FLAG | CMD_INPUT_FLAG,
 		"Searches for files by tags",
 		"(tag)..."
 	},
@@ -184,7 +183,7 @@ const struct Cmd commands[] = {
 		"remove-file" ,"rf",
 		&remove_file ,
 		1,-1,
-		0,
+		CMD_INPUT_FLAG,
 		"Removes file",
 		"(hash)..."
 	},
@@ -471,8 +470,10 @@ remove_file(int argc, char **argv){
 
 	for(int i = 0;i < argc;i++){
 		PyrosFile *pFile = Pyros_Get_File_From_Hash(pyrosDB, argv[i]);
-		if (pFile != NULL)
+		if (pFile != NULL){
 			Pyros_Remove_File(pyrosDB,pFile);
+			Pyros_Close_File(pFile);
+		}
 	}
 
 	commit(pyrosDB);
