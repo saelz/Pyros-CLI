@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 #include <pyros.h>
 
@@ -53,10 +55,10 @@ const struct Cmd commands[] = {
 	{
 		"create", "c",
 		&create,
-		0,-1,
+		0,1,
 		0,
 		"Creates a database",
-		""
+		"[md5|sha1|sha256|sha512|blake2s|blake2b]"
 	},
 	{
 		"version", "v",
@@ -282,16 +284,38 @@ PrintList(PyrosList *pList){
 static void
 create(int argc, char **argv){
 	PyrosDB *pyrosDB;
-	UNUSED(argc);
-	UNUSED(argv);
+	enum PYROS_HASHTYPE hashtype = PYROS_BLAKE2BHASH;
 
-	//TODO check that database does not exist
+	if (argc >= 1){
+		char lower[strlen(argv[0])];
+		for(size_t i = 0; argv[0][i] != '\0'; i++)
+			lower[i] = tolower(argv[0][i]);
+
+		if (!strcmp(lower, "md5")){
+			hashtype = PYROS_MD5HASH;
+		} else if(!strcmp(lower, "sha1")){
+			hashtype = PYROS_SHA1HASH;
+		} else if(!strcmp(lower, "sha256")){
+			hashtype = PYROS_SHA256HASH;
+		} else if(!strcmp(lower, "sha512")){
+			hashtype = PYROS_SHA512HASH;
+		} else if(!strcmp(lower, "blake2b")){
+			hashtype = PYROS_BLAKE2BHASH;
+		} else if(!strcmp(lower, "blake2s")){
+			hashtype = PYROS_BLAKE2SHASH;
+		} else {
+			ERROR(stderr,"Unkown hash type \"%s\".\n",argv[0]);
+			exit(1);
+		}
+	}
+
 	if (!Pyros_Database_Exists(PDB_PATH)){
-		pyrosDB = Pyros_Create_Database(PDB_PATH,PYROS_BLAKE2BHASH);
+		pyrosDB = Pyros_Create_Database(PDB_PATH,hashtype);
+
 		commit(pyrosDB);
 		Pyros_Close_Database(pyrosDB);
 	} else {
-		ERROR(stderr,"Database \"%s\" already exists.",PDB_PATH);
+		ERROR(stderr,"Database \"%s\" already exists.\n",PDB_PATH);
 	}
 }
 

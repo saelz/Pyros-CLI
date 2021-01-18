@@ -13,14 +13,14 @@
 typedef void (*Command)(int argc,char **argv);
 
 enum GLOBAL_FLAGS{
-	GLOBAL_HELP_FLAG = 0x01,
-	GLOBAL_DIR_FLAG  = 0x02,
+	GLOBAL_HELP_FLAG = 1,
+	GLOBAL_DIR_FLAG  = 2,
 };
 
 enum COMMAND_FLAGS{
-	CMD_HASH_FLAG      = 0x01,
-	CMD_RECURSIVE_FLAG = 0x02,
-	CMD_INPUT_FLAG     = 0x04,
+	CMD_HASH_FLAG      = 1,
+	CMD_RECURSIVE_FLAG = 2,
+	CMD_INPUT_FLAG     = 4,
 };
 
 struct Flag{
