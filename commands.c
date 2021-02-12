@@ -475,7 +475,12 @@ get_related(int argc, char **argv){
 
 static void
 merge(int argc, char **argv){
-	forEachChild(argc,argv,Pyros_Merge_Hashes);
+	PyrosDB *pyrosDB = open_db(PDB_PATH);
+	for (int i = 1; i < argc; i++)
+		Pyros_Merge_Hashes(pyrosDB, argv[0], argv[i],TRUE);
+
+	commit(pyrosDB);
+	Pyros_Close_Database(pyrosDB);
 }
 
 static void
