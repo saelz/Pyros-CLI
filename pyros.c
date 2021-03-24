@@ -26,13 +26,13 @@ int flags    = 0;
 struct Flag gflags[] = {
 	{
 		'h',"help",
-		"shows help page for command",
+		"show general help page or a help page for a specific command",
 		"",
 		GLOBAL_HELP_FLAG
 	},
 	{
 		'd',"database" ,
-		"sets database to use",
+		"set database to operate on",
 		"<dir>",
 		GLOBAL_DIR_FLAG
 	},
@@ -43,14 +43,14 @@ size_t gflags_len = LENGTH(gflags);
 struct Flag cmdflags[] = {
 	{
 		'H',"show-hash",
-		"returns file hases instead of file paths",
+		"List file hases instead of file paths",
 		"",
 		CMD_HASH_FLAG
 	},
 	{
 		'r',
 		"recursive",
-		"gets all files recursivly in directory",
+		"recursivly get all files in a directory",
 		"",
 		CMD_RECURSIVE_FLAG
 	},
@@ -117,7 +117,7 @@ help(const struct Cmd *cmd){
 			printf("\nOPTIONS:\n");
 			for (size_t i = 0; i < LENGTH(cmdflags);i++){
 				if (cmd->supported_flags & cmdflags[i].value)
-					printf("  -%c -%-10s %-5s%s\n",
+					printf("  -%c --%-10s %-5s%s\n",
 						   cmdflags[i].shortName,cmdflags[i].longName,
 						   cmdflags[i].usage,cmdflags[i].desc);
 			}

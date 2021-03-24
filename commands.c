@@ -49,7 +49,7 @@ const struct Cmd commands[] = {
 		&help,
 		0,-1,
 		0,
-		"Prints help message",
+		"Print help message",
 		"[command]"
 	},
 	{
@@ -57,7 +57,7 @@ const struct Cmd commands[] = {
 		&create,
 		0,1,
 		0,
-		"Creates a database",
+		"Create a new database",
 		"[md5|sha1|sha256|sha512|blake2s|blake2b]"
 	},
 	{
@@ -65,7 +65,7 @@ const struct Cmd commands[] = {
 		&version ,
 		0,-1
 		,0,
-		"Shows database Version",
+		"Show Pyros version",
 		""
 	},
 
@@ -74,7 +74,7 @@ const struct Cmd commands[] = {
 		,&add,
 		1,-1,
 		CMD_RECURSIVE_FLAG | CMD_INPUT_FLAG,
-		"Adds file(s) to database",
+		"Add file(s) to database",
 		"(file | directory)... [tag]..."
 	},
 	{
@@ -82,7 +82,7 @@ const struct Cmd commands[] = {
 		&add_tag,
 		2,-1,
 		0,
-		"Adds tag to file",
+		"Add tag(s) to file",
 		"<hash> <tag>..."
 	},
 	{
@@ -90,7 +90,7 @@ const struct Cmd commands[] = {
 		&search,
 		1,-1,
 		CMD_HASH_FLAG | CMD_INPUT_FLAG,
-		"Searches for files by tags",
+		"Search for files by tags",
 		"(tag)..."
 	},
 	{
@@ -98,7 +98,7 @@ const struct Cmd commands[] = {
 		&list_hash,
 		0 ,0,
 		0,
-		"Lists all file hashes",
+		"List all file hashes",
 		""
 	},
 	{
@@ -106,7 +106,7 @@ const struct Cmd commands[] = {
 		&get_alias,
 		1 ,1,
 		0,
-		"Gets alias of a tag",
+		"List aliases of a tag",
 		"(tag)"
 	},
 	{
@@ -114,7 +114,7 @@ const struct Cmd commands[] = {
 		&get_children,
 		1 ,1,
 		0,
-		"Gets children of a tag",
+		"List children of a tag",
 		"(tag)"
 	},
 	{
@@ -122,7 +122,7 @@ const struct Cmd commands[] = {
 		&get_parents,
 		1 ,1,
 		0,
-		"Gets parents of a tag",
+		"List parents of a tag",
 		"(tag)"
 	},
 	{
@@ -130,7 +130,7 @@ const struct Cmd commands[] = {
 		&get_hash ,
 		1 ,1,
 		0,
-		"Get tags from hash",
+		"List tags associated with a file",
 		"(hash)"
 	},
 	{
@@ -138,7 +138,7 @@ const struct Cmd commands[] = {
 		&get_related,
 		1 ,1,
 		0,
-		"Recursivly retrives all children and alias tags",
+		"Recursivly list all children and aliases of a tag",
 		"(tag)"
 	},
 	{
@@ -146,7 +146,7 @@ const struct Cmd commands[] = {
 		&add_alias,
 		2,-1,
 		0,
-		"Adds alias to a tag",
+		"Add alias to a tag",
 		"(tag) (tag)..."
 	},
 	{
@@ -154,7 +154,7 @@ const struct Cmd commands[] = {
 		&add_parent ,
 		2,-1,
 		0,
-		"Adds parent to tag",
+		"Add parent to a tag",
 		"<child_tag> <parent_tag>..."
 	},
 	{
@@ -162,7 +162,7 @@ const struct Cmd commands[] = {
 		&add_child ,
 		2,-1,
 		0,
-		"Adds child to tag",
+		"Add child to a tag",
 		"<parent_tag> <child_tag>..."
 	},
 	{
@@ -170,7 +170,7 @@ const struct Cmd commands[] = {
 		&remove_relationship ,
 		2,-1,
 		0,
-		"Removes relationships between tags",
+		"Remove relationship between tags",
 		"(tag) (tag)..."
 	},
 	{
@@ -178,7 +178,7 @@ const struct Cmd commands[] = {
 		&remove_tag ,
 		2,-1,
 		0,
-		"Removes tag from file",
+		"Remove tag(s) from file",
 		"<hash> <tag>..."
 	},
 	{
@@ -186,7 +186,7 @@ const struct Cmd commands[] = {
 		&remove_file ,
 		1,-1,
 		CMD_INPUT_FLAG,
-		"Removes file",
+		"Remove file(s) from database",
 		"(hash)..."
 	},
 	{
@@ -194,7 +194,7 @@ const struct Cmd commands[] = {
 		&merge,
 		2,-1,
 		0,
-		"merges file into another one",
+		"Merge files together",
 		"<master_hash> <merged_hash>..."
 	},
 	{
@@ -202,7 +202,7 @@ const struct Cmd commands[] = {
 		&prune_tags ,
 		0, 0,
 		0,
-		"prunes unused tags from database",
+		"Prune unused tags from database",
 		""
 	},
 };
