@@ -17,6 +17,7 @@ DECLARE(version);
 DECLARE(add);
 DECLARE(search);
 DECLARE(list_hash);
+DECLARE(list_tags);
 DECLARE(get_alias);
 DECLARE(get_children);
 DECLARE(get_parents);
@@ -99,6 +100,14 @@ const struct Cmd commands[] = {
 		0 ,0,
 		0,
 		"List all file hashes",
+		""
+	},
+	{
+		"list-tags" ,"lt",
+		&list_tags,
+		0 ,0,
+		0,
+		"List all tags",
 		""
 	},
 	{
@@ -417,6 +426,16 @@ list_hash(int argc, char **argv){
 	UNUSED(argv);
 
 	PrintList(Pyros_Get_All_Hashes(pyrosDB));
+	Pyros_Close_Database(pyrosDB);
+}
+
+static void
+list_tags(int argc, char **argv){
+	PyrosDB *pyrosDB = open_db(PDB_PATH);
+	UNUSED(argc);
+	UNUSED(argv);
+
+	PrintList(Pyros_Get_All_Tags(pyrosDB));
 	Pyros_Close_Database(pyrosDB);
 }
 
