@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 
 #include <pyros.h>
 
@@ -75,7 +78,7 @@ const struct Cmd commands[] = {
 		"add", "a"
 		,&add,
 		1,-1,
-		CMD_RECURSIVE_FLAG | CMD_INPUT_FLAG,
+		CMD_RECURSIVE_FLAG | CMD_INPUT_FLAG | CMD_PROGRESS_FLAG,
 		"Add file(s) to database",
 		"(file | directory)... [tag]..."
 	},
@@ -373,6 +376,31 @@ version(int argc, char **argv){
 }
 
 static void
+add_progress_cb(char*hash,char*file,size_t position,void*data){
+	struct winsize w;
+	size_t len = *(size_t*)data;
+	double progress = position/(double)len;
+	double prog_bar_size;
+
+	UNUSED(hash);
+	ioctl(STDOUT_FILENO,TIOCGWINSZ,&w);
+	prog_bar_size = w.ws_col/2.0;
+
+	for(int i = 0;i < w.ws_col; i++)
+		putchar(' ');
+
+	printf("\r%s\n[",file);
+	for(int i = 0;i < prog_bar_size; i++){
+		if (progress >= i/prog_bar_size)
+			putchar('*');
+		else
+			putchar(' ');
+	}
+	printf("] %d%%\r",(int)(progress*100));
+	fflush(stdout);
+}
+
+static void
 add(int argc, char **argv){
 	PyrosList *tags = Pyros_Create_List(argc,sizeof(char*));
 	PyrosList *files = Pyros_Create_List(argc,sizeof(char*));
@@ -387,9 +415,14 @@ add(int argc, char **argv){
 		exit(1);
 	}
 
-	Pyros_Add_Full(pyrosDB, (char**)files->list, files->length,
-				   (char**)tags->list, tags->length,
-				   TRUE,FALSE, NULL, NULL);
+	if (flags & CMD_PROGRESS_FLAG)
+		Pyros_Add_Full(pyrosDB, (char**)files->list, files->length,
+					   (char**)tags->list, tags->length,
+					   TRUE,FALSE, &add_progress_cb, &files->length);
+	else
+		Pyros_Add_Full(pyrosDB, (char**)files->list, files->length,
+					   (char**)tags->list, tags->length,
+					   TRUE,FALSE, NULL,NULL);
 
 	commit(pyrosDB);
 	Pyros_List_Free(tags,NULL);

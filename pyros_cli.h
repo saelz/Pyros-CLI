@@ -21,6 +21,7 @@ enum COMMAND_FLAGS{
 	CMD_HASH_FLAG      = 1,
 	CMD_RECURSIVE_FLAG = 2,
 	CMD_INPUT_FLAG     = 4,
+	CMD_PROGRESS_FLAG     = 8,
 };
 
 struct Flag{

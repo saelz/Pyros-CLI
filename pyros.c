@@ -61,6 +61,13 @@ struct Flag cmdflags[] = {
 		"",
 		CMD_INPUT_FLAG
 	},
+	{
+		'p',
+		"progress",
+		"show progress",
+		"",
+		CMD_PROGRESS_FLAG
+	},
 };
 
 static const struct Cmd *
