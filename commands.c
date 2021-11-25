@@ -32,6 +32,7 @@ DECLARE(remove_file);
 DECLARE(merge);
 DECLARE(prune_tags);
 DECLARE(add_tag);
+DECLARE(vacuum);
 
 
 
@@ -212,6 +213,14 @@ const struct Cmd commands[] = {
 		0, 0,
 		0,
 		"Prune unused tags from database",
+		""
+	},
+	{
+		"vacuum" ,"vc" ,
+		&vacuum ,
+		0, 0,
+		0,
+		"Vacuum the database",
 		""
 	},
 };
@@ -545,6 +554,19 @@ add_tag(int argc, char **argv){
 	PyrosDB *pyrosDB = open_db(PDB_PATH);
 
 	Pyros_Add_Tag(pyrosDB,argv[0], &argv[1], argc-1);
+
+	commit(pyrosDB);
+	Pyros_Close_Database(pyrosDB);
+}
+
+static void
+vacuum(int argc, char **argv){
+	PyrosDB *pyrosDB = open_db(PDB_PATH);
+
+	UNUSED(argc);
+	UNUSED(argv);
+
+	Pyros_Vacuum_Database(pyrosDB);
 
 	commit(pyrosDB);
 	Pyros_Close_Database(pyrosDB);
