@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <dirent.h>
 #include <stddef.h>
 #include <sys/stat.h>
@@ -6,11 +7,23 @@
 
 #include <pyros.h>
 
+#include "pyros_cli.h"
+
+extern const char* ExecName;
+
+int pathExists(const char *path){
+	struct stat statbuf;
+	if (stat(path, &statbuf))
+		return FALSE;
+
+	return TRUE;
+}
+
 int
 isDirectory(const char *path) {
 	struct stat statbuf;
-	if (stat(path, &statbuf) != 0)
-		return 0;
+	if (stat(path, &statbuf))
+		return FALSE;
 
 	return S_ISDIR(statbuf.st_mode);
 }
@@ -18,11 +31,64 @@ isDirectory(const char *path) {
 int
 isFile(const char *path){
 	struct stat statbuf;
-	if (stat(path, &statbuf) != 0)
-		return 0;
+	if (stat(path, &statbuf))
+		return FALSE;
 
 	return S_ISREG(statbuf.st_mode);
 }
+
+void
+cp(const char *src_path,const char *dest_path){
+	FILE *src, *dest;
+	char buf[4096];
+	size_t read_bytes,written_bytes;
+	char *ptr;
+
+	src = fopen(src_path,"rb");
+	if (src == NULL){
+		ERROR(stderr,"Unable to open source file %s",src_path);
+		exit(1);
+	}
+
+	dest = fopen(dest_path,"wb");
+	if (dest == NULL){
+		ERROR(stderr,"Unable to open destination file %s",dest_path);
+		exit(1);
+	}
+
+	while ((read_bytes = fread(buf, sizeof(*buf), 4096, src)) > 0){
+		ptr = buf;
+
+		while (read_bytes > 0){
+			written_bytes = fwrite(ptr,sizeof(*ptr),read_bytes,dest);
+			read_bytes -= written_bytes;
+			ptr += written_bytes;
+		}
+	}
+
+	fclose(src);
+	fclose(dest);
+
+}
+
+void
+writeListToFile(const PyrosList *pList,const char *dest_path){
+	FILE *dest;
+	size_t i;
+	dest = fopen(dest_path,"w");
+
+	if (dest == NULL){
+		ERROR(stderr,"Unable to open file %s",dest_path);
+		return;
+	}
+
+	for(i = 0;i < pList->length;i++){
+		fwrite(pList->list[i],sizeof(char),strlen(pList->list[i]),dest);
+		fwrite("\n",sizeof(char),1,dest);
+	}
+	fclose(dest);
+}
+
 
 void
 getFilesFromArgs(PyrosList *other, PyrosList *files, PyrosList *dirs,

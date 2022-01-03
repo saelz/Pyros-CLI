@@ -36,6 +36,7 @@ DECLARE(merge);
 DECLARE(prune_tags);
 DECLARE(add_tag);
 DECLARE(vacuum);
+DECLARE(export);
 
 
 
@@ -225,6 +226,14 @@ const struct Cmd commands[] = {
 		0,
 		"Vacuum the database",
 		""
+	},
+	{
+		"export" ,"ex" ,
+		&export ,
+		2, -1,
+		0,
+		"Copy files from the database to specified directory",
+		"<output_dir> <tags>..."
 	},
 };
 
@@ -602,5 +611,56 @@ vacuum(int argc, char **argv){
 	Pyros_Vacuum_Database(pyrosDB);
 
 	commit(pyrosDB);
+	Pyros_Close_Database(pyrosDB);
+}
+
+static void
+export(int argc, char **argv){
+	PyrosDB *pyrosDB = open_db(PDB_PATH);
+	PyrosList *files = Pyros_Search(pyrosDB, argv+1, argc-1);
+	PyrosFile *file;
+	PyrosList *tags;
+	char *dest_path = NULL;
+	size_t i;
+
+	if (files != NULL && files->length > 0){
+		if (!pathExists(argv[0])){
+			ERROR(stderr,"%s does not exist\n",argv[0]);
+			goto end;
+		} else if (isFile(argv[0])){
+			ERROR(stderr,"%s is a file not a directory\n",argv[0]);
+			goto end;
+		}
+
+		for(i = 0; i < files->length; i++){
+			file = files->list[i];
+			dest_path = malloc(strlen(argv[0])+
+							   strlen(file->hash)+
+							   strlen(file->ext)+6);
+
+			strcpy(dest_path,argv[0]);
+			strcat(dest_path,"/");
+			strcat(dest_path,file->hash);
+			strcat(dest_path,".");
+			strcat(dest_path,file->ext);
+			printf("%s -> %s\n",file->hash,dest_path);
+			cp(file->path,dest_path);
+
+			tags = Pyros_Get_Tags_From_Hash_Simple(pyrosDB,
+												   file->hash,
+												   FALSE);
+
+			strcat(dest_path,".txt");
+			if (tags != NULL)
+				writeListToFile(tags,dest_path);
+
+			Pyros_List_Free(tags, free);
+			free(dest_path);
+		}
+	}
+
+
+end:
+	Pyros_List_Free(files, (Pyros_Free_Callback)Pyros_Close_File);
 	Pyros_Close_Database(pyrosDB);
 }
