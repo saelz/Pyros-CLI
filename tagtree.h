@@ -3,7 +3,7 @@
 
 #include "pyros.h"
 
-typedef struct TagTree{
+typedef struct TagTree {
 	struct TagTree *children;
 	int child_count;
 	size_t capacity;
@@ -12,7 +12,7 @@ typedef struct TagTree{
 	int depth;
 } TagTree;
 
-TagTree *PyrosTagToTree(PyrosTag **tag,int length);
+TagTree *PyrosTagToTree(PyrosTag **tag, int length);
 
 void PrintTree(TagTree *tree);
 void DestroyTree(TagTree *tree);
