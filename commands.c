@@ -455,13 +455,13 @@ add(int argc, char **argv) {
 	}
 
 	if (flags & CMD_PROGRESS_FLAG) {
-		CHECK_ERROR(Pyros_Add_Full(pyrosDB, (char **)files->list,
-		                           files->length, (char **)tags->list,
+		CHECK_ERROR(Pyros_Add_Full(pyrosDB, (const char **)files->list,
+		                           files->length, (const char **)tags->list,
 		                           tags->length, TRUE, FALSE,
 		                           &add_progress_cb, &files->length));
 	} else {
-		CHECK_ERROR(Pyros_Add_Full(pyrosDB, (char **)files->list,
-		                           files->length, (char **)tags->list,
+		CHECK_ERROR(Pyros_Add_Full(pyrosDB, (const char **)files->list,
+		                           files->length, (const char **)tags->list,
 		                           tags->length, TRUE, FALSE, NULL,
 		                           NULL));
 	}
@@ -493,7 +493,7 @@ search(int argc, char **argv) {
 	PyrosDB *pyrosDB = open_db(PDB_PATH);
 	PyrosList *files;
 
-	files = Pyros_Search(pyrosDB, argv, argc);
+	files = Pyros_Search(pyrosDB,(const char**) argv, argc);
 	if (files == NULL) {
 		CHECK_ERROR(Pyros_Get_Error_Type(pyrosDB));
 	}
@@ -672,7 +672,7 @@ static void
 add_tag(int argc, char **argv) {
 	PyrosDB *pyrosDB = open_db(PDB_PATH);
 
-	CHECK_ERROR(Pyros_Add_Tag(pyrosDB, argv[0], &argv[1], argc - 1))
+	CHECK_ERROR(Pyros_Add_Tag(pyrosDB, argv[0], (const char**)&argv[1], argc - 1))
 
 	commit(pyrosDB);
 	close_db(pyrosDB);
@@ -692,7 +692,7 @@ vacuum(int argc, char **argv) {
 
 static void export(int argc, char **argv) {
 	PyrosDB *pyrosDB = open_db(PDB_PATH);
-	PyrosList *files = Pyros_Search(pyrosDB, argv + 1, argc - 1);
+	PyrosList *files = Pyros_Search(pyrosDB, (const char**)argv + 1, argc - 1);
 	PyrosFile *file;
 	PyrosList *tags;
 	char *dest_path = NULL;
