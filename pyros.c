@@ -137,6 +137,7 @@ set_dir(char *dir) {
 		strcpy(PDB_PATH, dir);
 	}
 
+	return;
 error_oom:
 	ERROR(stderr, "Out of memory");
 	exit(1);
